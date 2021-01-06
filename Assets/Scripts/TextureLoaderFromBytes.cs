@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.Text;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
@@ -11,7 +12,15 @@ public class TextureLoaderFromBytes : MonoBehaviour
     private int maxImageNum = 2;
     void Start() {
         rootPath = Application.dataPath + "/Textures/";
-        StartCoroutine(ChangeTexture());
+        // StartCoroutine(ChangeTexture());
+
+        
+
+        byte[] readBinary = ReadFile(rootPath + "sample-image-1.jpeg");
+        
+        // Debug.Log(readBinary[0]);
+        // var texture = CreateTexture(readBinary);
+        // GetComponent<Renderer>().material.mainTexture = texture;
     }
 
     IEnumerator ChangeTexture(){
@@ -27,9 +36,41 @@ public class TextureLoaderFromBytes : MonoBehaviour
         }
     }
 
+    public void Set(byte[] bytes) {
+
+        var texture = new Texture2D(1, 1);
+
+        texture.LoadImage(bytes);
+
+        // Image内に割り当てられたスクリプト内なら下記を呼ぶだけ。
+        GetComponent<Renderer>().material.mainTexture = texture;
+    }
+
+    public void ChangeTexture(string data) {
+        byte[] b = Encoding.UTF8.GetBytes(data);
+        var texture = CreateTexture(b);
+        GetComponent<Renderer>().material.mainTexture = texture;
+    }
+
+    Texture CreateTexture(byte[] data)
+    {
+        byte[] readBinary = data;
+        
+        // Debug.Log(Encoding.UTF8.GetString(readBinary));
+        Debug.Log(readBinary.Length);
+
+        Texture2D texture = new Texture2D(1, 1);
+        texture.LoadImage(readBinary);
+
+        return texture;
+    }
+
     Texture ReadTexture(string path)
     {
         byte[] readBinary = ReadFile(rootPath + path);
+        
+        // Debug.Log(Encoding.UTF8.GetString(readBinary));
+        // Debug.Log(readBinary.Length);
 
         Texture2D texture = new Texture2D(1, 1);
         texture.LoadImage(readBinary);

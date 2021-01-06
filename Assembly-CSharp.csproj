@@ -36,6 +36,7 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
+     <Compile Include="Assets\Scripts\BytesReceiver.cs" />
      <Compile Include="Assets\Scripts\SimpleUDPReceiver.cs" />
      <Compile Include="Assets\Scripts\TextureLoaderFromBytes.cs" />
     <Reference Include="UnityEngine">
