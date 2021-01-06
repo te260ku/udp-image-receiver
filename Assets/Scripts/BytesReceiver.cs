@@ -1,33 +1,39 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 
 public class BytesReceiver : MonoBehaviour
 {
-    private int LOCA_LPORT = 12345;
+    private readonly int LOCA_LPORT = 12345;
+    private readonly int maxDGRAM;
+    private readonly int maxImgDGRAM;
     static UdpClient udp;
     Thread thread;
     
     public TextureLoaderFromBytes textureLoader;
+
     private bool completePacket;
+    private bool isWaitingPacket = true;
     
     List<byte> byteList;
-    
+
+    public BytesReceiver() {
+        maxDGRAM = (int)Mathf.Pow(2, 16);
+        maxImgDGRAM = maxDGRAM - 64;
+    }
+
     void Start ()
     {
-
+        Debug.Log(maxDGRAM);
         udp = new UdpClient(LOCA_LPORT);
         udp.Client.ReceiveTimeout = 0;
         thread = new Thread(new ThreadStart(ThreadMethod));
         thread.Start(); 
 
         byteList = new List<byte> {};
-        
     }
 
     void OnApplicationQuit()
@@ -41,10 +47,7 @@ public class BytesReceiver : MonoBehaviour
             completePacket = false;
         } 
 
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            SetByteToTexture();
-        }
+        
     }
 
     public void SetByteToTexture() {
@@ -54,26 +57,42 @@ public class BytesReceiver : MonoBehaviour
         byteList.Clear();
     }
 
+    private void AddBytes(byte[] bytes) {
+        foreach (var item in bytes)
+        {
+            byteList.Add(item);
+        }
+    }
+
+    private byte[] RemoveHeader(byte[] bytes) {
+        var list = new List<byte>(bytes);
+        list.RemoveAt(0);
+        return list.ToArray();
+    }
+
     private void ThreadMethod()
     {
         while(true)
         {
             IPEndPoint remoteEP = null;
             byte[] data = udp.Receive(ref remoteEP);
+            Debug.Log("Received Packet Size: " + data.Length);
+            byte[] body = RemoveHeader(data);
 
-            string text = Encoding.UTF8.GetString(data);
-            
-            if (text == "__end__") {
-                Debug.Log("end");
-                completePacket = true;
+            if (data.Length == maxImgDGRAM+1) {
+                AddBytes(body);   
+                isWaitingPacket = true;
             } else {
-                Debug.Log("receive");
-                foreach (var item in data)
-                {
-                    byteList.Add(item);
+                if (isWaitingPacket) {
+                    Debug.Log("end");
+                    AddBytes(body);
+                    isWaitingPacket = false;
+                    completePacket = true;
                 }
-
             }
+            
         }
     } 
+
+    
 }
