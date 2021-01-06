@@ -12,17 +12,12 @@ public class BytesReceiver : MonoBehaviour
     private int LOCA_LPORT = 12345;
     static UdpClient udp;
     Thread thread;
-
-    string texts;
-
     
     public TextureLoaderFromBytes textureLoader;
-    private bool init;
+    private bool completePacket;
     
     List<byte> byteList;
     
-    
-
     void Start ()
     {
 
@@ -41,28 +36,22 @@ public class BytesReceiver : MonoBehaviour
     }
 
     void Update() {
-        if (init) {
-            
-            byte[] bytes = System.Convert.FromBase64String(texts);
-            textureLoader.Set(bytes);
-            
-            init = false;
+        if (completePacket) {
+            SetByteToTexture();  
+            completePacket = false;
         } 
-
-        if (Input.GetKeyDown(KeyCode.Space)) {
-            Debug.Log("end");
-            init = true;
-        }
 
         if (Input.GetKeyDown(KeyCode.A))
         {
-            // byte[] bytes = System.Convert.FromBase64String(texts);
-            // Debug.Log(texts);   
-
-            byte[] bytes = byteList.ToArray();
-            textureLoader.Set(bytes);
-            
+            SetByteToTexture();
         }
+    }
+
+    public void SetByteToTexture() {
+        byte[] bytes = byteList.ToArray();
+        textureLoader.SetTexture(bytes);
+
+        byteList.Clear();
     }
 
     private void ThreadMethod()
@@ -76,21 +65,15 @@ public class BytesReceiver : MonoBehaviour
             
             if (text == "__end__") {
                 Debug.Log("end");
-                
-                init = true;
+                completePacket = true;
             } else {
-                
-                // string s = Convert.ToBase64String(data);
-                // Debug.Log(s);
-                // texts += s;
-
+                Debug.Log("receive");
                 foreach (var item in data)
                 {
                     byteList.Add(item);
                 }
-                
+
             }
-            
         }
     } 
 }
